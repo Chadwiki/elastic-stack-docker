@@ -1,0 +1,114 @@
+version: '2.2'
+services:
+  es01:
+    container_name: es01
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+    environment:
+      - node.name=es01
+      - discovery.zen.minimum_master_nodes=2
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD 
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=true
+      - xpack.security.audit.enabled=true
+      - xpack.security.audit.outputs=index
+      - xpack.security.audit.index.settings.index.number_of_shards=1
+      - xpack.security.audit.index.settings.index.number_of_replicas=1
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate 
+      - xpack.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
+      - xpack.ssl.certificate=$CERTS_DIR/es01/es01.crt
+      - xpack.ssl.key=$CERTS_DIR/es01/es01.key
+      - xpack.notification.email.account.prod.profile=mailgun
+      - xpack.notification.email.account.prod.smtp.auth=true
+      - xpack.notification.email.account.prod.smtp.starttls.enable=true
+      - xpack.notification.email.account.prod.smtp.host=$SMTP_HOST
+      - xpack.notification.email.account.prod.smtp.port=$SMTP_PORT
+      - xpack.notification.email.account.prod.smtp.user=$SMTP_USER
+      - xpack.notification.email.account.prod.smtp.password=$SMTP_PASSWORD
+      - xpack.notification.email.account.prod.email_defaults.from=$SMTP_FROM
+      - xpack.monitoring.enabled=true
+      - xpack.monitoring.collection.enabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes: ['esdata_01:/usr/share/elasticsearch/data', './certs:$CERTS_DIR']
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+    healthcheck:
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  es02:
+    container_name: es02
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+    environment:
+      - node.name=es02
+      - discovery.zen.minimum_master_nodes=2
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+      - discovery.zen.ping.unicast.hosts=es01
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=true
+      - xpack.security.audit.enabled=true
+      - xpack.security.audit.outputs=index
+      - xpack.security.audit.index.settings.index.number_of_shards=1
+      - xpack.security.audit.index.settings.index.number_of_replicas=1
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.verification_mode=certificate
+      - xpack.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
+      - xpack.ssl.certificate=$CERTS_DIR/es02/es02.crt
+      - xpack.ssl.key=$CERTS_DIR/es02/es02.key
+      - xpack.notification.email.account.prod.profile=mailgun
+      - xpack.notification.email.account.prod.smtp.auth=true
+      - xpack.notification.email.account.prod.smtp.starttls.enable=true
+      - xpack.notification.email.account.prod.smtp.host=$SMTP_HOST
+      - xpack.notification.email.account.prod.smtp.port=$SMTP_PORT
+      - xpack.notification.email.account.prod.smtp.user=$SMTP_USER
+      - xpack.notification.email.account.prod.smtp.password=$SMTP_PASSWORD
+      - xpack.notification.email.account.prod.email_defaults.from=$SMTP_FROM
+      - xpack.monitoring.enabled=true
+      - xpack.monitoring.collection.enabled=true
+      - xpack.license.self_generated.type=trial
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes: ['esdata_02:/usr/share/elasticsearch/data', './certs:$CERTS_DIR']
+    networks:
+      - esnet
+    healthcheck:
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  wait_until_ready:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+    command: /usr/bin/true
+    depends_on: {"es01": {"condition": "service_healthy"}}
+
+#volumes: {"esdata_01": {"driver": "local"}, "esdata_02": {"driver": "local"}}
+volumes:
+  esdata_01:
+    driver: local
+  esdata_02:
+    driver: local
+
+networks:
+  esnet:
+
+# https://www.elastic.co/guide/en/elasticsearch/reference/6.3/configuring-tls-docker.html
+# start trial - POST _xpack/license/start_trial?acknowledge=true
+# curl -k -XPOST https://localhost:9200/_xpack/license/start_trial?acknowledge=true
+# https://10.6.253.228:9200/_cat/indices?v&s=index
+# network.host: [ _site_, _local_ ]
