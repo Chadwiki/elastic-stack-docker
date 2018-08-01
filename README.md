@@ -16,7 +16,7 @@ docker push <the name of repository>/<the name of image>:<the name of tag>
 1) Create your docker network:
 - `docker network create esnet`
 
-2) First create the certs for the environment - from elasticsearch DIR:
+2) Create the ssl certs for the environment, from elasticsearch DIR:
 - `docker-compose -f create-certs.yml up`
 
 3) copy certs directory over to the kibana directory:
