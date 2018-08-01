@@ -45,4 +45,8 @@ docker push <the name of repository>/<the name of image>:<the name of tag>
 ``
 *********
 
-#### Test
+#### Informational:
+- https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-change-password.html
+
+##### Testing ssl from container
+- ` curl --cacert certs/ca/ca.crt -u elastic:changeme https://es01:9200`
