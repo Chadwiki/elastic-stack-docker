@@ -1,4 +1,4 @@
-version: '2.2'
+version: '3'
 services:
   kibana:
     image: docker.elastic.co/kibana/kibana:6.3.1
@@ -6,7 +6,13 @@ services:
       - "5601:5601"
     volumes: ['./kibana.yml:/usr/share/kibana/config/kibana.yml','./certs:/usr/share/kibana/certs']
 
-#    environment:
+    environment:
 #      SERVER_NAME: kibana01
-#      ELASTICSEARCH_URL: https://localhost:9200
+      ELASTICSEARCH_URL: https://es01:9200
+      NODE_OPTIONS: "--max-old-space-size=300"
 #      XPACK_MONITORING_ENABLED
+ 
+networks:
+  default:
+    external:
+      name: esnet
