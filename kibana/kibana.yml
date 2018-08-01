@@ -40,6 +40,6 @@ xpack.security.enabled: true
 xpack.monitoring.enabled: true
 #xpack.monitoring.elasticsearch.url: ${ELASTICSEARCH_URL}
 xpack.monitoring.kibana.collection.enabled: true
-#xpack.monitoring.elasticsearch.ssl.certificateAuthorities: [ "./certs/ca/ca.crt" ]
+xpack.monitoring.elasticsearch.ssl.certificateAuthorities: [ "./certs/ca/ca.crt" ]
 xpack.monitoring.ui.container.elasticsearch.enabled: true
 xpack.ml.enabled: true
